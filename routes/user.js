@@ -7,7 +7,7 @@ const pokemonMap = require('../models/pokemonMap.js');
 
 
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try{
         const users = await User.find();
         res.send(users);
@@ -145,5 +145,22 @@ async function getUser(req, res, next){
     res.user = user;
     next();
 }
+
+function authenticateToken(req,res,next){
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if(token == null){
+        return res.sendStatus(401);
+    };
+        jwt.verify(token, process.env.JWT_SECRET, (err,user) => {
+            if(err){
+                return res.sendStatus(403);
+            }
+            //res.json({status:"Success"});
+            req.user = user;
+            next();
+        })
+    
+};
 
 module.exports = router;
