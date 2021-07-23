@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Pokemon = require('../models/pokemons.js');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 router.get('/', async (req, res) => {
 try{
@@ -11,11 +13,11 @@ try{
 }
 });
 
-router.get('/:id', getPokemon, (req, res) => {
+router.get('/:id', authenticateToken, getPokemon, (req, res) => {
     res.json(res.pokemon);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const pokemon = new Pokemon({
         name: req.body.name,
         element: req.body.element,
@@ -80,5 +82,23 @@ async function getPokemon(req, res, next){
     res.pokemon = pokemon;
     next();
 }
+
+function authenticateToken(req,res,next){
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if(token == null){
+        return res.sendStatus(401);
+    };
+        jwt.verify(token, process.env.JWT_SECRET, (err,user) => {
+            if(err){
+                return res.sendStatus(403);
+            }
+            //res.json({status:"Success"});
+            req.user = user;
+            next();
+        })
+    
+};
+
 
 module.exports = router;
