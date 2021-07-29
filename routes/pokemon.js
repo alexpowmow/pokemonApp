@@ -18,15 +18,15 @@ router.get('/:id', authenticateToken, getPokemon, (req, res) => {
 });
 
 router.post('/', authenticateToken, async (req, res) => {
-    const pokemon = new Pokemon({
-        name: req.body.name,
-        element: req.body.element,
-        attack: req.body.attack,
-        health: req.body.health,
-        weakness: req.body.weakness
-    });
-
+    
     try{
+        const pokemon = new Pokemon({
+            name: req.body.name,
+            element: req.body.element,
+            attack: req.body.attack,
+            health: req.body.health,
+            weakness: req.body.weakness
+        });
         const newPokemon = await pokemon.save();
         res.status(201).json(newPokemon);
     } catch(err){
@@ -34,25 +34,36 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-router.patch('/:id', getPokemon, async(req, res) => {
+router.patch('/:id', authenticateToken, async(req, res) => {
+    
+    var pokemon = null;
+    try{
+        pokemon = await Pokemon.findById(req.params.id);
+        if(pokemon == null){
+            return res.status(404).json({message:'Cannot find Pokemon'});
+        }
+    } catch (err) {
+        return res.status(500).json({message: err.message});
+    }
+    
     if(req.body.name != null){
-        res.pokemon.name = req.body.name;
+        pokemon.name = req.body.name;
     }
     if(req.body.element != null){
-        res.pokemon.element = req.body.element;
+        pokemon.element = req.body.element;
     }
     if(req.body.attack != null){
-        res.pokemon.attack = req.body.attack;
+        pokemon.attack = req.body.attack;
     }
     if(req.body.health != null){
-        res.pokemon.health= req.body.health;
+        pokemon.health= req.body.health;
     }
     if(req.body.weakness != null){
-        res.pokemon.weakness = req.body.weakness;
+        pokemon.weakness = req.body.weakness;
     }
 
     try{
-        const updatedPokemon = await res.pokemon.save();
+        const updatedPokemon = await pokemon.save();
         res.json(updatedPokemon);
     } catch(err){
         res.status(400).json({message: err.message})
