@@ -85,9 +85,10 @@ async function checkPokemon(pokemonArray){
 
 try{
 var pokemonArray1 = [];
-pokemonArray.forEach(async (pokemon)  => {
+pokemonArray.forEach(async function iterateThrough(pokemon) {
+    try{
     if(pokemon.length<12){
-        throw new Error(`Pokemon id ${pokemon} is too short. Length must exceed 12 to be valid.`);
+        throw `Pokemon id ${pokemon} is too short. Length must exceed 12 to be valid.`;
     }
     ObjectId(pokemon);
     user = await pokemons.findById(pokemon);
@@ -98,6 +99,9 @@ pokemonArray.forEach(async (pokemon)  => {
         console.log(`Pokemon with id ${pokemon} has been found`);
         pokemonArray1.push(pokemon);
     }
+}catch(error){
+    console.log(error);
+}
 });
 return pokemonArray1;
 } catch(error){

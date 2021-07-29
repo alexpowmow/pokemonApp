@@ -4,7 +4,15 @@ const User = require('../models/users.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pokemonMap = require('../models/pokemonMap.js');
+const crypto = require('crypto-js');
 
+
+
+const hashPassword = (password, salt, secret) => {
+    const stringToSign = `${password}-${salt}`;
+    const hash = crypto.HmacSHA256(stringToSign, secret)
+    return crypto.enc.Base64.stringify(hash);
+}
 
 
 router.get('/', authenticateToken, async (req, res) => {
@@ -25,8 +33,10 @@ router.get('/', authenticateToken, async (req, res) => {
         });
 
         
-
-
+        const userCheck = await User.findOne({username:user.username}).lean();
+        if(userCheck){
+            return res.json({ status: 'error', error:'Username already exists'});
+        }
         if(!user.username || typeof user.username !== 'string'){
             return res.json({ status: 'error', error:'Invalid username'});
         };
@@ -39,7 +49,7 @@ router.get('/', authenticateToken, async (req, res) => {
             return res.json({ status: 'error', error:'Invalid password. Length must be greater than 5'});
         }
 
-        user.password = await bcrypt.hash(user.password, 10);
+        //user.password = await bcrypt.hash(user.password, 10);
         console.log('Username ' + user.username);
         console.log('Password ' + user.password);
     
@@ -60,8 +70,8 @@ router.get('/', authenticateToken, async (req, res) => {
 
 
 
-router.post('/change-password', async (req,res) => {
-const{token, newpassword} = req.body;
+router.post('/change-password', authenticateToken, async (req,res) => {
+const newpassword = req.body.newpassword;
 
 
 if(!newpassword || typeof newpassword !== 'string'){
@@ -72,21 +82,19 @@ if(newpassword.length <5){
     return res.json({ status: 'error', error:'Invalid password. Length must be greater than 5'});
 }
 try{
-const user = jwt.verify(token, JWT_SECRET);
+const user = req.user;
 console.log(user);
 const _id = user.id;
-const hashedPassword = await bcrypt.hash(newpassword,10);
-await User.updateOne({_id}, {$set:{password: hashedPassword}});
+//const hashedPassword = hashPassword(newpassword, process.env.SALT, process.env.JWT_SECRET);
+await User.updateOne({_id}, {$set:{password: newpassword}});
 res.json({status: "ok"});
 }catch(error){
     console.log(error);
     res.json({status:'error', error:'not verified'});
 }
 
-
-
-
 });
+
 
 router.delete('/:id', getUser, async (req, res) => {
     try{
@@ -102,22 +110,23 @@ router.post('/login', async (req, res) => {
     const{username, password} = req.body;
     const user = await User.findOne({username}).lean();
     //res.send(user);
-    console.log(username);
-    console.log(password);
-    console.log(user.password);
+    //password = hashPassword(password, process.env.SALT, process.env.JWT_SECRET);
+    console.log(`Username passed through body ${username}`);
+    console.log(`Password passed through body ${password}`);
+    console.log(`Password found in database ${user.password}`);
 
     if(!user){
         return res.json({status:'error', error: 'Invalid username/password'});
     };
 
-  const validUser = await bcrypt.compare(password, user.password);
-    if(validUser){
+  //const validUser = await bcrypt.compare(password, user.password);
+    if(password === user.password){
         const token = jwt.sign({id: user._id, username: user.username}, process.env.JWT_SECRET,{expiresIn: '1h'});
         //console.log('here');
         res.json({accessToken: token});
         return res.status(200);
     };
-    if(!validUser){
+    if(password !== user.password){
         res.json({status: "Error", error: "Incorrect Password"});
     }
     
@@ -162,5 +171,6 @@ function authenticateToken(req,res,next){
         })
     
 };
+
 
 module.exports = router;
