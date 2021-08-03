@@ -4,6 +4,161 @@ const Pokemon = require('../models/pokemons.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+
+
+/**
+ * @swagger
+ * paths:
+ *  /pokemon:
+ *   get:
+ *     summary: Returns all of the pokemon in the database
+ *     tags: [Pokemons]
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Pokemon'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
+
+
+/**
+ * @swagger
+ * paths:
+ *  /pokemon/{id}:
+ *   get:
+ *     security:
+ *      - bearerAuth: []
+ *     summary: Returns a pokemon with given id
+ *     tags: [Pokemons]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Pokemon'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
+
+/**
+ * @swagger
+ * paths:
+ *  /pokemon:
+ *   post:
+ *     security:
+ *      - bearerAuth: []
+ *     summary: Post a new pokemon
+ *     tags: [Pokemons]
+ *     requestBody:
+ *      required: true
+ *      content:
+ *       application/json:
+ *         schema:
+ *          $ref: '#components/schemas/Pokemon'
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Pokemon'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
+
+/**
+ * @swagger
+ * paths:
+ *  /pokemon:
+ *   patch:
+ *     security:
+ *      - bearerAuth: []
+ *     summary: Post a new pokemon
+ *     tags: [Pokemons]
+ *     requestBody:
+ *      required: true
+ *      content:
+ *       application/json:
+ *         schema:
+ *          $ref: '#components/schemas/Pokemon'
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Pokemon'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
+
+/**
+ * @swagger
+ * paths:
+ *  /pokemon/{id}:
+ *   delete:
+ *     security:
+ *      - bearerAuth: []
+ *     summary: Deletes a pokemon with given id
+ *     tags: [Pokemons]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/Success'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
 router.get('/', async (req, res) => {
 try{
     const pokemons = await Pokemon.find();
@@ -71,10 +226,14 @@ router.patch('/:id', authenticateToken, async(req, res) => {
 });
 
 
-router.delete('/:id', getPokemon, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try{
-        await res.pokemon.remove();
-        res.send('Item deleted');
+        const pokemon = await Pokemon.findById(req.params.id);
+        if(pokemon == null){
+            return res.status(404).json({message:'Cannot find Pokemon'});
+        }
+        await pokemon.remove();
+        res.status(200).json({message: `Pokemon with id ${pokemon.id} has been removed`});
     } catch(err){
         res.status(500).json({message: err.message});
     }
