@@ -95,7 +95,33 @@ ObjectId = require('mongodb').ObjectID;
  * 
 */
 
-
+/**
+ * @swagger
+ * paths:
+ *  /map/{id}:
+ *   delete:
+ *     security:
+ *      - bearerAuth: []
+ *     summary: Deletes a pokemon from the users collection with given pokemon ID
+ *     tags: [Map]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/Success'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
 
 
 router.post('/', authenticateToken, async (req, res) => {
@@ -157,9 +183,13 @@ router.get('/:id', authenticateToken, async(req, res) =>{
 
 router.delete('/:id', authenticateToken, async(req, res) =>{
     try{
-        const userId = req.params.id;
-        const user = await User.findById(userId);
-        const userMap = await pokemonMap.findOne({userId:user.id}).lean();
+        const removePokemon = req.params.id;
+        const user = req.user;
+        const userId = user.id;
+        const userMap = await pokemonMap.findOne({userId: userId}).lean();
+        
+        const _id = userMap.id;
+        console.log(_id);
         if(user == null){
             return res.status(404).json({message:'Cannot find User'});
         }
@@ -168,11 +198,10 @@ router.delete('/:id', authenticateToken, async(req, res) =>{
         }
         console.log(user);
         console.log(userMap);
-        await pokemonMap.findOne({userId:user.id}).lean().remove();
+        await pokemonMap.updateOne({id: _id}, {$pull: {pokemonId: removePokemon}});
         
-        await user.remove();
         
-        res.status(200).json({status: `User with id ${user} has been removed alongside its map`});
+        res.status(200).json({status: `Pokemon with id ${removePokemon} has been removed from your profile`});
     } catch(err){
         res.status(500).json({message: err.message});
     }

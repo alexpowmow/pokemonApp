@@ -281,6 +281,39 @@ const { db } = require('../models/users.js');
 */
 
 
+/**
+ * @swagger
+ * paths:
+ *  /user/change-password:
+ *   post:
+ *     summary: Change a users password
+ *     security:
+ *      - bearerAuth: []
+ *     tags: [Users]
+ *     requestBody:
+ *      required: true
+ *      content:
+ *       application/json:
+ *         schema:
+ *            type: String
+ *            description: The new password
+ *            example:
+ *                newpassword: "password1234"
+ *           
+ *     responses:
+ *       201:
+ *         $ref: '#/components/responses/CreatedResource'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *        
+ *      
+ *         
+ *     
+ * 
+*/
+
 const hashPassword = (password, salt, secret) => {
     const stringToSign = `${password}-${salt}`;
     const hash = crypto.HmacSHA256(stringToSign, secret)

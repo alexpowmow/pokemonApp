@@ -84,6 +84,8 @@ const jwt = require('jsonwebtoken');
  *           application/json:
  *              schema:
  *                $ref: '#/components/schemas/Pokemon'
+ *       201:
+ *         $ref: '#/components/responses/CreatedResource'
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  *       403:
@@ -100,11 +102,11 @@ const jwt = require('jsonwebtoken');
 /**
  * @swagger
  * paths:
- *  /pokemon:
+ *  /pokemon/{id}:
  *   patch:
  *     security:
  *      - bearerAuth: []
- *     summary: Post a new pokemon
+ *     summary: Edit a pokemons attributes
  *     tags: [Pokemons]
  *     requestBody:
  *      required: true
