@@ -5,9 +5,10 @@ require('dotenv').config();
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 //const swaggerMain = require('routes/swagger.js');
+console.log('\n\n These are the environment variables ', process.env);
+const dbUrl = 'mongodb://localhost/pokemon';
 
-
-mongoose.connect(process.env.DATABASE_URL, {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(dbUrl, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const options = {
     definition:{

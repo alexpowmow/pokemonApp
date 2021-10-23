@@ -3,7 +3,7 @@ const router = express.Router();
 const Pokemon = require('../models/pokemons.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const { v4: uuidv4 } = require('uuid');
 
 
 /**
@@ -166,12 +166,12 @@ try{
     const pokemons = await Pokemon.find();
     res.send(pokemons);
 } catch (err) {
- res.status(500).json({message: err.message});
+ res.status(500).json(standardError(500, 'Internal server error'));
 }
 });
 
 router.get('/:id', authenticateToken, getPokemon, (req, res) => {
-    res.json(res.pokemon);
+    res.status(200).json(successResponse(200, 'Pokemon found',res.pokemon));
 });
 
 router.post('/', authenticateToken, async (req, res) => {
@@ -185,9 +185,9 @@ router.post('/', authenticateToken, async (req, res) => {
             weakness: req.body.weakness
         });
         const newPokemon = await pokemon.save();
-        res.status(201).json(newPokemon);
+        res.status(201).json(successResponse(201, 'Pokemon created', newPokemon));
     } catch(err){
-        res.status(400).json({ message: err.message});
+        res.status(400).json(standardError(400, 'Could not create pokemon'));
     }
 });
 
@@ -197,10 +197,10 @@ router.patch('/:id', authenticateToken, async(req, res) => {
     try{
         pokemon = await Pokemon.findById(req.params.id);
         if(pokemon == null){
-            return res.status(404).json({message:'Cannot find Pokemon'});
+            return res.status(404).json(standardError(404, 'Could not find pokemon'));
         }
     } catch (err) {
-        return res.status(500).json({message: err.message});
+        return res.status(500).json(standardError(500, 'Internal server error'));
     }
     
     if(req.body.name != null){
@@ -221,9 +221,9 @@ router.patch('/:id', authenticateToken, async(req, res) => {
 
     try{
         const updatedPokemon = await pokemon.save();
-        res.json(updatedPokemon);
+        res.status(200).json(successResponse(200, 'Patched pokemon', updatedPokemon));
     } catch(err){
-        res.status(400).json({message: err.message})
+        res.status(400).json(standardError(400, 'Could not patch pokemon'))
     }
 });
 
@@ -232,12 +232,12 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     try{
         const pokemon = await Pokemon.findById(req.params.id);
         if(pokemon == null){
-            return res.status(404).json({message:'Cannot find Pokemon'});
+            return res.status(404).json(standardError(404, 'Could not find pokemon'));
         }
         await pokemon.remove();
-        res.status(200).json({message: `Pokemon with id ${pokemon.id} has been removed`});
+        res.status(200).json(standardSuccess(200, `Pokemon with id ${pokemon.id} has been removed`));
     } catch(err){
-        res.status(500).json({message: err.message});
+        res.status(500).json(standardError(500, 'Internal server error'));
     }
 });
 
@@ -245,10 +245,10 @@ async function getPokemon(req, res, next){
     try{
         pokemon = await Pokemon.findById(req.params.id);
         if(pokemon == null){
-            return res.status(404).json({message:'Cannot find Pokemon'});
+            return res.status(404).json(standardError(404, "Could not find pokemon"));
         }
     } catch (err) {
-        return res.status(500).json({message: err.message});
+        return res.status(500).json(standardError(500, 'Internal server error'));
     }
 
     res.pokemon = pokemon;
@@ -272,5 +272,23 @@ function authenticateToken(req,res,next){
     
 };
 
+function standardError(status, message){
+    const errorId = uuidv4();
+    const error = {Error: {id: uuidv4(), message: message, code: status}};
+    return error;
+    
+    };
+    
+    function standardSuccess(status, message){
+    const successId = uuidv4();
+    const success = {Success: {id: uuidv4(), message: message, code: status}};
+    return success;
+    };
+    
+    function successResponse(status, message, content){
+    const successId = uuidv4();
+    const success = {Success: {id: uuidv4(), message: message, code: status} , Content: content};
+    return success;
+    };
 
 module.exports = router;

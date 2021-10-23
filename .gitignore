@@ -122,4 +122,17 @@ dist
 Library/
 .DS_Store
 
+#Docker
+Dockerfile
+docker-compose.yml
+docker-composeTest.yml
+.docker/
+data/
 
+#Vue
+vue-app/
+.viminfo
+.vuerc
+
+#html
+index.html
